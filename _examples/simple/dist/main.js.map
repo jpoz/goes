@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/counter.ts", "../src/main.ts"],
+  "sourcesContent": ["export function setupCounter(element: HTMLButtonElement) {\n  let counter = 0\n  const setCounter = (count: number) => {\n    counter = count\n    element.innerHTML = `count is ${counter}`\n  }\n  element.addEventListener('click', () => setCounter(counter + 1))\n  setCounter(0)\n}\n", "import './style.css'\nimport { setupCounter } from './counter.ts'\n\ndocument.querySelector<HTMLDivElement>('#app')!.innerHTML = `\n  <div>\n    <h1>TypeScript + Go</h1>\n    <div class=\"card\">\n      <button id=\"counter\" type=\"button\"></button>\n    </div>\n  </div>\n`\n\nsetupCounter(document.querySelector<HTMLButtonElement>('#counter')!)\n"],
+  "mappings": "mBAAO,SAASA,EAAaC,EAA4B,CACvD,IAAIC,EAAU,EACRC,EAAcC,GAAkB,CACpCF,EAAUE,EACVH,EAAQ,UAAY,YAAYC,CAAO,EACzC,EACAD,EAAQ,iBAAiB,QAAS,IAAME,EAAWD,EAAU,CAAC,CAAC,EAC/DC,EAAW,CAAC,CACd,CCLA,SAAS,cAA8B,MAAM,EAAG,UAAY;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,EAS5DE,EAAa,SAAS,cAAiC,UAAU,CAAE",
+  "names": ["setupCounter", "element", "counter", "setCounter", "count", "setupCounter"]
+}
