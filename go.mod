@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/charmbracelet/log v0.3.1
 	github.com/evanw/esbuild v0.19.11
-	github.com/go-chi/chi/v5 v5.0.11
 )
 
 require (
