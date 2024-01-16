@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jpoz/goes"
 	"github.com/jpoz/goes/examples/simple/src"
 )
 
@@ -28,9 +29,10 @@ func main() {
 	fileServer := http.FileServer(http.Dir(path.Join(dirname, "public")))
 	r.Handle("/*", fileServer)
 	r.Handle("/src/*", src.Handler("/src", goes.Options{
-		OnlyEmbedded: true,
+		Mode: goes.ModeEmbedded,
 	}))
 
 	log.Info("Starting server", "port", "3001")
-	http.ListenAndServe(":3001", r)
+	err := http.ListenAndServe(":3001", r)
+	log.Error(err)
 }

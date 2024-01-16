@@ -1,6 +1,12 @@
 {
-  "output": "dist",
-  "entrypoints": [
-    "main.ts"
-  ]
+	"Outdir": "dist",
+	"Entrypoints": [
+		"main.ts"
+	],
+	"Bundle": true,
+	"Write": true,
+	"Sourcemap": 2,
+	"MinifyWhitespace": true,
+	"MinifyIdentifiers": true,
+	"MinifySyntax": true
 }

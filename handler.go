@@ -10,15 +10,25 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/evanw/esbuild/pkg/api"
 )
 
-func ESHandler(cfg Config, befs embed.FS, efsRoot string) func(string, Options) http.HandlerFunc {
+func ESHandler(
+	root string,
+	cfg Config,
+	befs embed.FS,
+) func(string, Options) http.HandlerFunc {
 	buildOptions := *cfg.BuildOptions
 
-	efs, err := fs.Sub(befs, efsRoot)
+	buildOptions.Outdir = path.Join(root, cfg.Outdir)
+	for i := range cfg.Entrypoints {
+		cfg.Entrypoints[i] = path.Join(root, cfg.Entrypoints[i])
+	}
+
+	efs, err := fs.Sub(befs, cfg.Outdir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,30 +38,30 @@ func ESHandler(cfg Config, befs embed.FS, efsRoot string) func(string, Options) 
 			urlPath := r.URL.Path
 			requestPath := strings.TrimPrefix(urlPath, root)
 
-			log.Info("Serving request", "url", urlPath, "root", root, "requestPath", requestPath)
-
 			if requestPath == "" || requestPath == "/" {
 				index(efs, w, r)
 				return
 			}
 
-			// Todo configure this
-			err := serverEmbeddedFiles(efs, requestPath, w, r)
-			if err == nil {
+			if opts.Mode == ModeEmbedded {
+				err = serverEmbeddedFiles(efs, requestPath, w, r)
+				if err != nil {
+					log.Error(fmt.Errorf("Failed to serve %s: %v", requestPath, err))
+					http.NotFound(w, r)
+				}
 				return
 			}
 
-			if opts.OnlyEmbedded {
-				http.NotFound(w, r)
-				return
-			}
-
+			now := time.Now()
 			err = buildAndServerFromESBuild(buildOptions, requestPath, w, r)
-			if err == nil {
-				return
+			log.Info("Built package", "filename", requestPath, "duration", time.Since(now))
+			if err != nil {
+				err = fmt.Errorf("Failed to build %s: %v", requestPath, err)
+				log.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 
-			http.NotFound(w, r)
+			return
 		}
 	}
 }
@@ -62,7 +72,6 @@ func buildAndServerFromESBuild(
 	w http.ResponseWriter,
 	r *http.Request,
 ) error {
-	log.Info("Building package", "filename", requestPath)
 	result := api.Build(buildOptions)
 	if len(result.Errors) != 0 {
 		return fmt.Errorf("failed to build package: %v", result.Errors)
@@ -78,11 +87,10 @@ func buildAndServerFromESBuild(
 			w.Write(outputFile.Contents)
 			return nil
 		}
-		existingFiles = append(existingFiles, relativePath)
+		existingFiles = append(existingFiles, outputFile.Path)
 	}
 
-	log.Error("File not found", "filename", requestPath, "existingFiles", existingFiles)
-	return fmt.Errorf("file not found: %s", requestPath)
+	return fmt.Errorf("file not found: %s. Existing files: %v", requestPath, existingFiles)
 }
 
 func serverEmbeddedFiles(efs fs.FS, requestPath string, w http.ResponseWriter, r *http.Request) error {

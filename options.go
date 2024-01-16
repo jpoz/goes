@@ -1,5 +1,13 @@
 package goes
 
+type Mode int
+
+const (
+	ModeBuild Mode = iota
+	ModeEmbedded
+)
+
 type Options struct {
-	OnlyEmbedded bool
+	Mode   Mode
+	Logger any
 }
